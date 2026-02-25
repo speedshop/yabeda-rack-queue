@@ -86,8 +86,7 @@ If a timestamp is invalid, we do not record anything. We should not raise any ex
 
 If the computed queue time (`now - request_start`) is negative — which can happen
 when the application server's clock is slightly ahead of the load balancer's
-clock — it is clamped to `0.0` seconds. A metric observation of `0.0` is still
-recorded, indicating the header was present.
+clock — the observation is dropped (no metric is recorded).
 
 We'll log a WARN level message in this case.
 
@@ -130,11 +129,11 @@ Assumptions used below:
 
 ### Queue time post-processing examples
 
-| Parsed `request_start` | `now` | Raw queue time (s) | `puma.request_body_wait` | Final observed value (s) |
-|---:|---:|---:|---:|---:|
+| Parsed `request_start` | `now` | Raw queue time (s) | `puma.request_body_wait` | Final outcome |
+|---:|---:|---:|---:|---|
 | `1699999999.900` | `1700000000.000` | `0.100` | _absent_ | `0.100` |
 | `1699999999.900` | `1700000000.000` | `0.100` | `40` (ms) | `0.060` |
 | `1699999999.900` | `1700000000.000` | `0.100` | `"40"` (ms) | `0.060` |
-| `1700000000.050` | `1700000000.000` | `-0.050` | _absent_ | `0.000` (clock skew clamp) |
+| `1700000000.050` | `1700000000.000` | `-0.050` | _absent_ | dropped (clock skew, WARN logged) |
 | `1699999999.900` | `1700000000.000` | `0.100` | `200` (ms) | `0.000` (post-subtraction clamp) |
 
