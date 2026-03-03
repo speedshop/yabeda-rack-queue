@@ -6,6 +6,17 @@ This gem measures HTTP request queue time — the duration between when a revers
 proxy or load balancer first receives a request and when the Ruby application
 begins processing it. It reports this as a Yabeda histogram metric.
 
+The gem follows the Rack SPEC and uses Rack env/request-response conventions,
+but it should not declare `rack` as a gem dependency.
+
+## Testing Framework
+
+The test suite uses Minitest.
+
+## Linting
+
+Linting uses standardrb.
+
 ## Metric
 
 | Name | Type | Group | Unit | Description |
@@ -39,6 +50,13 @@ unaffected.
 - Current time is measured via `Process.clock_gettime(Process::CLOCK_REALTIME)`
   (wall clock, not monotonic — necessary because the header timestamp comes from
   a different process).
+
+## Performance Requirement
+
+For a no-op Rack app (for example, one that returns `hello world`), middleware
+throughput MUST exceed `1_000_000` calls/second.
+
+This requirement is enforced with a `benchmark-ips` benchmark test.
 
 ## Header Value Parsing
 
@@ -136,4 +154,3 @@ Assumptions used below:
 | `1699999999.900` | `1700000000.000` | `0.100` | `"40"` (ms) | `0.060` |
 | `1700000000.050` | `1700000000.000` | `-0.050` | _absent_ | dropped (clock skew, WARN logged) |
 | `1699999999.900` | `1700000000.000` | `0.100` | `200` (ms) | `0.000` (post-subtraction clamp) |
-
