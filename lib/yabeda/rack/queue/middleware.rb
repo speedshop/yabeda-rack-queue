@@ -28,26 +28,31 @@ module Yabeda
         end
 
         def call(env)
-          now = @clock.call
-          request_start = request_start_timestamp(env, now)
+          x_request_start = env[HEADER_KEYS[0]]
+          x_queue_start = env[HEADER_KEYS[1]]
 
-          report_queue_time(env, now, request_start) if request_start
+          if x_request_start || x_queue_start
+            now = @clock.call
+            request_start = request_start_timestamp(x_request_start, x_queue_start, now)
+            report_queue_time(env, now, request_start) if request_start
+          end
 
           @app.call(env)
         end
 
         private
 
-        def request_start_timestamp(env, now)
-          HEADER_KEYS.each do |header_key|
-            header_value = env[header_key]
-            next if header_value.nil?
+        def request_start_timestamp(x_request_start, x_queue_start, now)
+          parsed = parse_header_timestamp(x_request_start, now)
+          return parsed if parsed
 
-            parsed = @parser.parse(header_value, now: now)
-            return parsed if parsed
-          end
+          parse_header_timestamp(x_queue_start, now)
+        end
 
-          nil
+        def parse_header_timestamp(value, now)
+          return nil if value.nil?
+
+          @parser.parse(value, now: now)
         end
 
         def report_queue_time(env, now, request_start)

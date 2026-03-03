@@ -49,4 +49,13 @@ class HeaderTimestampParserTest < Minitest::Test
     header_value = "t=#{@now + 30.001}"
     assert_nil @parser.parse(header_value, now: @now)
   end
+
+  def test_accepts_values_exactly_30_seconds_in_the_future
+    header_value = "t=#{@now + 30.0}"
+    assert_in_delta @now + 30.0, @parser.parse(header_value, now: @now), 1e-9
+  end
+
+  def test_uses_only_first_comma_separated_value
+    assert_nil @parser.parse("invalid, t=1512379167.574", now: @now)
+  end
 end

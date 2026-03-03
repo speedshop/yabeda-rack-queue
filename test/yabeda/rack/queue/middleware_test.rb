@@ -124,22 +124,30 @@ class MiddlewareTest < Minitest::Test
 
   def test_uses_process_clock_gettime_realtime_by_default
     middleware = Yabeda::Rack::Queue::Middleware.new(@app, reporter: @reporter, logger: @logger)
+    observed_clock_ids = []
+    clock_gettime_stub = lambda do |clock_id|
+      observed_clock_ids << clock_id
+      @now
+    end
 
-    Process.stub(:clock_gettime, @now) do
+    Process.stub(:clock_gettime, clock_gettime_stub) do
       middleware.call("HTTP_X_REQUEST_START" => "t=1699999999.9")
     end
 
     refute_empty @reporter.values
+    assert_equal [Process::CLOCK_REALTIME], observed_clock_ids
   end
 
   def test_never_raises_on_invalid_header_values
     @middleware.call("HTTP_X_REQUEST_START" => Object.new, "HTTP_X_QUEUE_START" => "")
     assert_equal 1, @app.called_count
+    assert_empty @reporter.values
   end
 
   def test_drops_negative_queue_times_and_logs_warning
     @middleware.call("HTTP_X_REQUEST_START" => "t=1700000000.1")
 
+    assert_equal 1, @app.called_count
     assert_empty @reporter.values
     assert_includes @logger.warnings.join("\n"), "Negative rack queue duration"
   end

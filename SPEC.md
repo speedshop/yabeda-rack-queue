@@ -9,6 +9,14 @@ begins processing it. It reports this as a Yabeda histogram metric.
 The gem follows the Rack SPEC and uses Rack env/request-response conventions,
 but it should not declare `rack` as a gem dependency.
 
+## Testing Framework
+
+The test suite uses Minitest.
+
+## Linting
+
+Linting uses standardrb.
+
 ## Metric
 
 | Name | Type | Group | Unit | Description |
@@ -42,6 +50,13 @@ unaffected.
 - Current time is measured via `Process.clock_gettime(Process::CLOCK_REALTIME)`
   (wall clock, not monotonic — necessary because the header timestamp comes from
   a different process).
+
+## Performance Requirement
+
+For a no-op Rack app (for example, one that returns `hello world`), middleware
+throughput MUST exceed `1_000_000` calls/second.
+
+This requirement is enforced with a `benchmark-ips` benchmark test.
 
 ## Header Value Parsing
 

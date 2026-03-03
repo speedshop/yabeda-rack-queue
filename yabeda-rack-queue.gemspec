@@ -37,5 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "puma", ">= 6", "< 8"
   spec.add_development_dependency "rake", ">= 13.0"
   spec.add_development_dependency "minitest", ">= 5.22", "< 6.0"
+  spec.add_development_dependency "benchmark", ">= 0.4", "< 1.0"
+  spec.add_development_dependency "benchmark-ips", ">= 2.14", "< 3.0"
   spec.add_development_dependency "standard", "~> 1.44"
 end
