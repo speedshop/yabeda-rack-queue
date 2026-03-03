@@ -1,18 +1,30 @@
 # yabeda-rack-queue
 
-Rack middleware for reporting HTTP request queue time to Yabeda.
+Rack middleware that measures HTTP request queue time and reports it to
+[Yabeda core](https://github.com/yabeda-rb/yabeda) as a histogram.
+
+## Features
+
+- Reports upstream queue wait time before your app starts handling the request
+- Reads common queue headers (`X-Request-Start`, `X-Queue-Start`)
+- Exposes `rack_queue.rack_queue_duration` (seconds)
+- Supports Puma request body wait adjustment (`puma.request_body_wait`)
 
 ## Installation
 
-Add to your Gemfile:
+Add the gem:
 
 ```ruby
 gem "yabeda-rack-queue"
 ```
 
-Then bundle install.
+Then install dependencies:
 
-## Usage
+```bash
+bundle install
+```
+
+## Quickstart
 
 ```ruby
 require "yabeda/rack/queue"
@@ -24,5 +36,34 @@ use Yabeda::Rack::Queue::Middleware
 run MyRackApp
 ```
 
-The middleware inspects `X-Request-Start` / `X-Queue-Start` headers and records
-`rack_queue.rack_queue_duration` histogram values in seconds.
+Send a request with an upstream queue header (for example `X-Request-Start`) and
+the middleware will record `rack_queue.rack_queue_duration`.
+
+## Metric
+
+- Name: `rack_queue_duration`
+- Group: `rack_queue`
+- Type: histogram
+- Unit: seconds
+
+## Development
+
+Run tests:
+
+```bash
+bundle exec rake test
+```
+
+Run lint:
+
+```bash
+bundle exec standardrb
+```
+
+## Contributing
+
+Issues and pull requests are welcome.
+
+## License
+
+MIT, see [LICENSE.txt](LICENSE.txt).

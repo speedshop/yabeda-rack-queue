@@ -5,23 +5,23 @@ require_relative "lib/yabeda/rack/queue/version"
 Gem::Specification.new do |spec|
   spec.name = "yabeda-rack-queue"
   spec.version = Yabeda::Rack::Queue::VERSION
-  spec.authors = ["Yabeda Contributors"]
-  spec.email = ["maintainers@yabeda.dev"]
+  spec.authors = ["Nate Berkopec"]
+  spec.email = ["nate.berkopec@speedshop.co"]
 
   spec.summary = "Yabeda middleware for HTTP request queue duration"
   spec.description = <<~DESCRIPTION
     Rack middleware that measures HTTP request queue duration from upstream
     headers and reports it to Yabeda as a histogram metric.
   DESCRIPTION
-  spec.homepage = "https://github.com/yabeda-rb/yabeda-rack-queue"
+  spec.homepage = "https://github.com/speedshop/yabeda-rack-queue"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
   spec.metadata = {
-    "bug_tracker_uri" => "https://github.com/yabeda-rb/yabeda-rack-queue/issues",
-    "changelog_uri" => "https://github.com/yabeda-rb/yabeda-rack-queue/releases",
+    "bug_tracker_uri" => "https://github.com/speedshop/yabeda-rack-queue/issues",
+    "changelog_uri" => "https://github.com/speedshop/yabeda-rack-queue/releases",
     "homepage_uri" => spec.homepage,
-    "source_code_uri" => "https://github.com/yabeda-rb/yabeda-rack-queue",
+    "source_code_uri" => "https://github.com/speedshop/yabeda-rack-queue",
     "rubygems_mfa_required" => "true"
   }
 
@@ -32,11 +32,10 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "rack", ">= 2.2", "< 4.0"
   spec.add_dependency "yabeda", ">= 0.14", "< 1.0"
 
   spec.add_development_dependency "puma", ">= 6", "< 8"
   spec.add_development_dependency "rake", ">= 13.0"
-  spec.add_development_dependency "rspec", "~> 3.13"
+  spec.add_development_dependency "minitest", ">= 5.22", "< 6.0"
   spec.add_development_dependency "standard", "~> 1.44"
 end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "test_helper"
 require "net/http"
 require "puma"
 require "socket"
@@ -40,39 +40,38 @@ class PumaServerHarness
   end
 end
 
-RSpec.describe "Puma E2E queue time reporting" do
-  let(:rack_app) do
-    Yabeda::Rack::Queue::Middleware.new(
+class PumaIntegrationTest < Minitest::Test
+  def setup
+    super
+    rack_app = Yabeda::Rack::Queue::Middleware.new(
       ->(_env) { [200, {"content-type" => "text/plain"}, ["ok"]] }
     )
-  end
-  let(:server) { PumaServerHarness.new(rack_app) }
-
-  before do
-    server.start
+    @server = PumaServerHarness.new(rack_app)
+    @server.start
   rescue Errno::EPERM
     skip "Socket binding is not permitted in this environment"
   end
 
-  after do
-    server.stop
+  def teardown
+    @server&.stop
+    super
   end
 
-  it "records rack_queue_duration histogram via Yabeda on a real HTTP request" do
+  def test_records_rack_queue_duration_histogram_via_yabeda_on_real_http_request
     requested_queue_time_seconds = 0.12
     request_start_ms = ((Time.now.to_f - requested_queue_time_seconds) * 1_000).to_i
-    uri = URI("http://127.0.0.1:#{server.port}/")
+    uri = URI("http://127.0.0.1:#{@server.port}/")
     request = Net::HTTP::Get.new(uri)
     request["X-Request-Start"] = request_start_ms.to_s
 
     response = Net::HTTP.start(uri.host, uri.port) { |http| http.request(request) }
 
-    expect(response.code).to eq("200")
+    assert_equal "200", response.code
 
     metric = Yabeda.rack_queue.rack_queue_duration
     measured = Yabeda::TestAdapter.instance.histograms.fetch(metric).fetch({})
 
-    expect(measured).to be_a(Float)
-    expect(measured).to be >= (requested_queue_time_seconds - 0.005)
+    assert_kind_of Float, measured
+    assert_operator measured, :>=, requested_queue_time_seconds
   end
 end

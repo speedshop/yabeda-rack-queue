@@ -6,6 +6,9 @@ This gem measures HTTP request queue time — the duration between when a revers
 proxy or load balancer first receives a request and when the Ruby application
 begins processing it. It reports this as a Yabeda histogram metric.
 
+The gem follows the Rack SPEC and uses Rack env/request-response conventions,
+but it should not declare `rack` as a gem dependency.
+
 ## Metric
 
 | Name | Type | Group | Unit | Description |
@@ -136,4 +139,3 @@ Assumptions used below:
 | `1699999999.900` | `1700000000.000` | `0.100` | `"40"` (ms) | `0.060` |
 | `1700000000.050` | `1700000000.000` | `-0.050` | _absent_ | dropped (clock skew, WARN logged) |
 | `1699999999.900` | `1700000000.000` | `0.100` | `200` (ms) | `0.000` (post-subtraction clamp) |
-
