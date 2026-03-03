@@ -4,80 +4,48 @@ module Yabeda
   module Rack
     module Queue
       class Middleware
-        HEADER_KEYS = %w[HTTP_X_REQUEST_START HTTP_X_QUEUE_START].freeze
-        REQUEST_BODY_WAIT_KEY = "puma.request_body_wait"
-
         class StderrLogger
-          def warn(message)
-            Kernel.warn(message)
-          end
+          def warn(message) = Kernel.warn(message)
         end
 
         class YabedaReporter
-          def observe(value)
-            Yabeda.rack_queue.rack_queue_duration.measure({}, value)
-          end
+          def observe(value) = Yabeda.rack_queue.rack_queue_duration.measure({}, value)
         end
 
-        def initialize(app, reporter: YabedaReporter.new, parser: HeaderTimestampParser.new, logger: nil, clock: nil)
+        def initialize(app, reporter: YabedaReporter.new, logger: nil, clock: nil)
           @app = app
           @reporter = reporter
-          @parser = parser
+          @parser = HeaderTimestampParser.new
           @logger = logger || StderrLogger.new
           @clock = clock || -> { Process.clock_gettime(Process::CLOCK_REALTIME) }
         end
 
         def call(env)
-          x_request_start = env[HEADER_KEYS[0]]
-          x_queue_start = env[HEADER_KEYS[1]]
-
-          if x_request_start || x_queue_start
-            now = @clock.call
-            request_start = request_start_timestamp(x_request_start, x_queue_start, now)
-            report_queue_time(env, now, request_start) if request_start
-          end
-
+          measure_queue_time(env) if env["HTTP_X_REQUEST_START"] || env["HTTP_X_QUEUE_START"]
           @app.call(env)
         end
 
         private
 
-        def request_start_timestamp(x_request_start, x_queue_start, now)
-          parsed = parse_header_timestamp(x_request_start, now)
-          return parsed if parsed
-
-          parse_header_timestamp(x_queue_start, now)
-        end
-
-        def parse_header_timestamp(value, now)
-          return nil if value.nil?
-
-          @parser.parse(value, now: now)
+        def measure_queue_time(env)
+          now = @clock.call
+          start = @parser.parse(env["HTTP_X_REQUEST_START"], now: now) ||
+            @parser.parse(env["HTTP_X_QUEUE_START"], now: now)
+          report_queue_time(env, now, start) if start
         end
 
         def report_queue_time(env, now, request_start)
           queue_time = now - request_start
-          if queue_time.negative?
-            @logger.warn("Negative rack queue duration (#{queue_time}) observed; dropping measurement")
-            return
-          end
+          return @logger.warn("Negative rack queue duration (#{queue_time}); dropping") if queue_time.negative?
 
-          body_wait = parse_request_body_wait(env[REQUEST_BODY_WAIT_KEY])
-          queue_time -= body_wait if body_wait
-          queue_time = 0.0 if queue_time.negative?
-
-          @reporter.observe(queue_time)
+          body_wait = parse_body_wait(env["puma.request_body_wait"])
+          @reporter.observe([queue_time - (body_wait || 0), 0.0].max)
         end
 
-        def parse_request_body_wait(value)
-          return nil if value.nil?
-
-          milliseconds = Float(value)
-          return nil if milliseconds.negative?
-
-          milliseconds / 1_000.0
+        def parse_body_wait(value)
+          ms = Float(value)
+          ms / 1_000.0 unless ms.negative?
         rescue ArgumentError, TypeError
-          nil
         end
       end
     end
