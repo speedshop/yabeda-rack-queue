@@ -48,8 +48,6 @@ class PumaIntegrationTest < Minitest::Test
     )
     @server = PumaServerHarness.new(rack_app)
     @server.start
-  rescue Errno::EPERM
-    skip "Socket binding is not permitted in this environment"
   end
 
   def teardown
