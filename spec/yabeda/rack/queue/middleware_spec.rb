@@ -3,36 +3,36 @@
 require "spec_helper"
 
 RSpec.describe Yabeda::Rack::Queue::Middleware do
-  class CapturingReporter
-    attr_reader :values
-
-    def initialize
-      @values = []
-    end
-
-    def observe(value)
-      @values << value
-    end
-  end
-
-  class CapturingLogger
-    attr_reader :warnings
-
-    def initialize
-      @warnings = []
-    end
-
-    def warn(message)
-      @warnings << message
-    end
-  end
-
-  let(:response) { [201, { "content-type" => "text/plain" }, ["ok"]] }
+  let(:response) { [201, {"content-type" => "text/plain"}, ["ok"]] }
   let(:app) { ->(_env) { response } }
-  let(:reporter) { CapturingReporter.new }
+  let(:reporter) do
+    Class.new do
+      attr_reader :values
+
+      def initialize
+        @values = []
+      end
+
+      def observe(value)
+        @values << value
+      end
+    end.new
+  end
   let(:now) { 1_700_000_000.0 }
   let(:clock) { -> { now } }
-  let(:logger) { CapturingLogger.new }
+  let(:logger) do
+    Class.new do
+      attr_reader :warnings
+
+      def initialize
+        @warnings = []
+      end
+
+      def warn(message)
+        @warnings << message
+      end
+    end.new
+  end
   let(:middleware) { described_class.new(app, reporter: reporter, clock: clock, logger: logger) }
 
   describe "#call" do
@@ -46,7 +46,7 @@ RSpec.describe Yabeda::Rack::Queue::Middleware do
     end
 
     it "does not mutate rack env" do
-      env = { "HTTP_X_REQUEST_START" => "t=1699999999.9", "custom.key" => "value" }
+      env = {"HTTP_X_REQUEST_START" => "t=1699999999.9", "custom.key" => "value"}
       original = env.dup
 
       middleware.call(env)

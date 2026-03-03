@@ -7,8 +7,8 @@ module Yabeda
         MIN_EPOCH_SECONDS = Time.utc(2000, 1, 1).to_f
         FUTURE_TOLERANCE_SECONDS = 30.0
         NORMALIZATION_DIVISORS = [1_000_000.0, 1_000.0, 1.0].freeze
-        NUMBER_PATTERN = /[+-]?(?:\d+(?:\.\d+)?|\.\d+)/.freeze
-        T_EQUALS_PATTERN = /t\s*=\s*(#{NUMBER_PATTERN.source})/i.freeze
+        NUMBER_PATTERN = /[+-]?(?:\d+(?:\.\d+)?|\.\d+)/
+        T_EQUALS_PATTERN = /t\s*=\s*(#{NUMBER_PATTERN.source})/i
 
         def parse(value, now:)
           first_value = first_header_value(value)

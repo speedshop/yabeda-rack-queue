@@ -9,7 +9,7 @@ module Yabeda
 
         class StderrLogger
           def warn(message)
-            $stderr.puts(message)
+            Kernel.warn(message)
           end
         end
 

@@ -6,46 +6,44 @@ require "puma"
 require "socket"
 require "timeout"
 
-RSpec.describe "Puma E2E queue time reporting" do
-  class PumaServerHarness
-    attr_reader :port
+class PumaServerHarness
+  attr_reader :port
 
-    def initialize(app)
-      @app = app
-    end
+  def initialize(app)
+    @app = app
+  end
 
-    def start
-      @server = Puma::Server.new(@app, nil, min_threads: 0, max_threads: 4)
-      @server.add_tcp_listener("127.0.0.1", 0)
-      @port = @server.connected_ports.first
-      @server.run(true, thread_name: "puma-e2e")
-      wait_until_ready
-    end
+  def start
+    @server = Puma::Server.new(@app, nil, min_threads: 0, max_threads: 4)
+    @server.add_tcp_listener("127.0.0.1", 0)
+    @port = @server.connected_ports.first
+    @server.run(true, thread_name: "puma-e2e")
+    wait_until_ready
+  end
 
-    def stop
-      @server&.stop(true)
-    end
+  def stop
+    @server&.stop(true)
+  end
 
-    private
+  private
 
-    def wait_until_ready
-      Timeout.timeout(5) do
-        loop do
-          begin
-            socket = TCPSocket.new("127.0.0.1", port)
-            socket.close
-            break
-          rescue Errno::ECONNREFUSED
-            sleep 0.01
-          end
-        end
+  def wait_until_ready
+    Timeout.timeout(5) do
+      loop do
+        socket = TCPSocket.new("127.0.0.1", port)
+        socket.close
+        break
+      rescue Errno::ECONNREFUSED
+        sleep 0.01
       end
     end
   end
+end
 
+RSpec.describe "Puma E2E queue time reporting" do
   let(:rack_app) do
     Yabeda::Rack::Queue::Middleware.new(
-      ->(_env) { [200, { "content-type" => "text/plain" }, ["ok"]] }
+      ->(_env) { [200, {"content-type" => "text/plain"}, ["ok"]] }
     )
   end
   let(:server) { PumaServerHarness.new(rack_app) }
@@ -61,7 +59,8 @@ RSpec.describe "Puma E2E queue time reporting" do
   end
 
   it "records rack_queue_duration histogram via Yabeda on a real HTTP request" do
-    request_start_ms = ((Time.now.to_f - 0.12) * 1_000).to_i
+    requested_queue_time_seconds = 0.12
+    request_start_ms = ((Time.now.to_f - requested_queue_time_seconds) * 1_000).to_i
     uri = URI("http://127.0.0.1:#{server.port}/")
     request = Net::HTTP::Get.new(uri)
     request["X-Request-Start"] = request_start_ms.to_s
@@ -74,6 +73,6 @@ RSpec.describe "Puma E2E queue time reporting" do
     measured = Yabeda::TestAdapter.instance.histograms.fetch(metric).fetch({})
 
     expect(measured).to be_a(Float)
-    expect(measured).to be >= 0.0
+    expect(measured).to be >= (requested_queue_time_seconds - 0.005)
   end
 end

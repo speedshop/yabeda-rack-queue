@@ -20,8 +20,8 @@ end
 Yabeda.configure do
   group Yabeda::Rack::Queue::METRIC_GROUP do
     histogram Yabeda::Rack::Queue::METRIC_NAME,
-              comment: Yabeda::Rack::Queue::METRIC_DESCRIPTION,
-              unit: Yabeda::Rack::Queue::METRIC_UNIT,
-              buckets: Yabeda::Rack::Queue::HISTOGRAM_BUCKETS
+      comment: Yabeda::Rack::Queue::METRIC_DESCRIPTION,
+      unit: Yabeda::Rack::Queue::METRIC_UNIT,
+      buckets: Yabeda::Rack::Queue::HISTOGRAM_BUCKETS
   end
 end
