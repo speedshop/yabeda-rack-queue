@@ -55,7 +55,7 @@ class PumaIntegrationTest < Minitest::Test
     super
   end
 
-  def test_records_rack_queue_duration_histogram_via_yabeda_on_real_http_request
+  def test_records_duration_histogram_via_yabeda_on_real_http_request
     requested_queue_time_seconds = 0.12
     request_start_ms = ((Time.now.to_f - requested_queue_time_seconds) * 1_000).to_i
     uri = URI("http://127.0.0.1:#{@server.port}/")
@@ -66,7 +66,7 @@ class PumaIntegrationTest < Minitest::Test
 
     assert_equal "200", response.code
 
-    metric = Yabeda.rack_queue.rack_queue_duration
+    metric = Yabeda.rack_queue.duration
     measured = Yabeda::TestAdapter.instance.histograms.fetch(metric).fetch({})
 
     assert_kind_of Float, measured

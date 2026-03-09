@@ -12,7 +12,7 @@ High queue time means your app is too busy. It cannot take new requests. That is
 
 Load balancers can add a header to each request. The header records when the request arrived. Common headers are `X-Request-Start` and `X-Queue-Start`.
 
-This middleware reads that header. It subtracts the header's timestamp from the current time. Then it reports that value as `rack_queue.rack_queue_duration`.
+This middleware reads that header. It subtracts the header's timestamp from the current time. Then it reports that value as `rack_queue.duration`.
 
 > [!NOTE]
 > If neither header is present, no measurement is taken. The request passes through unchanged.
@@ -55,13 +55,15 @@ config.middleware.use Yabeda::Rack::Queue::Middleware
 
 | Name | Group | Type | Unit |
 |------|-------|------|------|
-| `rack_queue_duration` | `rack_queue` | histogram | seconds |
+| `duration` | `rack_queue` | histogram | seconds |
 
 Access it in code:
 
 ```ruby
-Yabeda.rack_queue.rack_queue_duration
+Yabeda.rack_queue.duration
 ```
+
+With adapters that prepend the group name, such as Prometheus, this becomes `rack_queue_duration_seconds`.
 
 Histogram buckets: 1 ms, 5 ms, 10 ms, 25 ms, 50 ms, 100 ms, 250 ms, 500 ms, 1 s, 2.5 s, 5 s, 10 s, 30 s, 60 s.
 
@@ -93,7 +95,6 @@ The middleware accepts these keyword arguments:
 | Argument | Default | Purpose |
 |----------|---------|---------|
 | `reporter:` | `YabedaReporter.new` | Writes the value to Yabeda. |
-| `parser:` | `HeaderTimestampParser.new` | Parses the header timestamp. |
 | `logger:` | stderr | Gets warning messages. |
 | `clock:` | `Process.clock_gettime(CLOCK_REALTIME)` | Returns current time in seconds. |
 

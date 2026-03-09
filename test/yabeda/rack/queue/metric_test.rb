@@ -3,10 +3,11 @@
 require "test_helper"
 
 class MetricTest < Minitest::Test
-  def test_registers_rack_queue_duration_histogram_with_required_metadata
-    metric = Yabeda.rack_queue.rack_queue_duration
+  def test_registers_duration_histogram_with_required_metadata
+    metric = Yabeda.rack_queue.duration
 
     assert_instance_of Yabeda::Histogram, metric
+    assert_equal :duration, metric.name
     assert_equal :rack_queue, metric.group
     assert_equal :seconds, metric.unit
     assert_equal "Time a request waited in the upstream queue before reaching the application", metric.comment

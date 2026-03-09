@@ -9,7 +9,7 @@ module Yabeda
         end
 
         class YabedaReporter
-          def observe(value) = Yabeda.rack_queue.rack_queue_duration.measure({}, value)
+          def observe(value) = Yabeda.rack_queue.duration.measure({}, value)
         end
 
         def initialize(app, reporter: YabedaReporter.new, logger: nil, clock: nil)

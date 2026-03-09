@@ -21,7 +21,7 @@ Linting uses standardrb.
 
 | Name | Type | Group | Unit | Description |
 |------|------|-------|------|-------------|
-| `rack_queue_duration` | histogram | `rack_queue` | seconds | Time a request waited in the upstream queue before reaching the application |
+| `duration` | histogram | `rack_queue` | seconds | Time a request waited in the upstream queue before reaching the application |
 
 ### Histogram Buckets
 
