@@ -32,6 +32,8 @@ module Yabeda
           start = @parser.parse(env["HTTP_X_REQUEST_START"], now: now) ||
             @parser.parse(env["HTTP_X_QUEUE_START"], now: now)
           report_queue_time(env, now, start) if start
+        rescue => error
+          @logger.warn("rack queue metric failed: #{error.class}: #{error.message}")
         end
 
         def report_queue_time(env, now, request_start)

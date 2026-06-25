@@ -2,6 +2,10 @@
 
 require "yabeda"
 
+# Yabeda only loads its Railtie if Rails exists when Yabeda is first required.
+# Puma plugins can require Yabeda before Rails, so retry when this gem loads.
+require "yabeda/railtie" if defined?(::Rails::Railtie)
+
 Yabeda.configure do
   group :rack_queue do
     histogram :duration,

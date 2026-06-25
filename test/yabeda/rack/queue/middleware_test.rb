@@ -14,6 +14,12 @@ class CapturingReporter
   end
 end
 
+class FailingReporter
+  def observe(_value)
+    raise NoMethodError, "undefined method `rack_queue' for Yabeda:Module"
+  end
+end
+
 class CapturingLogger
   attr_reader :warnings
 
@@ -142,6 +148,21 @@ class MiddlewareTest < Minitest::Test
     @middleware.call("HTTP_X_REQUEST_START" => Object.new, "HTTP_X_QUEUE_START" => "")
     assert_equal 1, @app.called_count
     assert_empty @reporter.values
+  end
+
+  def test_metric_reporting_errors_are_logged_and_do_not_break_request
+    middleware = Yabeda::Rack::Queue::Middleware.new(
+      @app,
+      reporter: FailingReporter.new,
+      clock: @clock,
+      logger: @logger
+    )
+
+    result = middleware.call("HTTP_X_REQUEST_START" => "t=1699999999.9")
+
+    assert_same @response, result
+    assert_equal 1, @app.called_count
+    assert_includes @logger.warnings.join("\n"), "rack queue metric failed: NoMethodError"
   end
 
   def test_drops_negative_queue_times_and_logs_warning
