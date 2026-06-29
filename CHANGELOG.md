@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 - 2026-06-29
+
+### Fixed
+
+- Keep requests flowing if rack queue metric reporting fails, logging the error instead.
+- Load `yabeda/railtie` when Rails appears after Yabeda was already required.
+
 ## 0.2.0 - 2026-03-09
 
 ### Changed
